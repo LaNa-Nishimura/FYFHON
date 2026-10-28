@@ -1,852 +1,426 @@
+
+import ast
+import re
 import sys
 
 
-# ==========================================
-# VARIÁVEIS GLOBAIS
-# ==========================================
-
-variaveis = {}
-
-
-# ==========================================
-# FUNÇÃO PARA OBTER VALORES
-# ==========================================
-
-def valor(expressao):
-
-    expressao = expressao.strip()
-
-    # Texto
-    if expressao.startswith('"') and expressao.endswith('"'):
-        return expressao[1:-1]
-
-    # FALE MINHA LINFA
-    # input()
-    if expressao == "FALE MINHA LINFA":
-        return input("> ")
-
-    # Número inteiro
-    try:
-        return int(expressao)
-    except ValueError:
-        pass
-
-    # Número decimal
-    try:
-        return float(expressao)
-    except ValueError:
-        pass
-
-    # Verdadeiro
-    if expressao == "FATO FIRMADO!":
-        return True
-
-    # Falso
-    if expressao == "FALSO, FALSO, FALSO!":
-        return False
-
-    # Variável
-    if expressao in variaveis:
-        return variaveis[expressao]
-
-    return expressao
-
-
-# ==========================================
-# COMPARAÇÃO
-# ==========================================
-
-def comparar(esquerda, operador, direita):
-
-    esquerda = valor(esquerda)
-    direita = valor(direita)
-
-    if operador == "==":
-        return esquerda == direita
-
-    if operador == "!=":
-        return esquerda != direita
-
-    if operador == ">":
-        return esquerda > direita
-
-    if operador == "<":
-        return esquerda < direita
-
-    if operador == ">=":
-        return esquerda >= direita
-
-    if operador == "<=":
-        return esquerda <= direita
-
-    return False
-
-
-# ==========================================
-# ENCONTRAR FIM DO BLOCO
-# ==========================================
-
-def encontrar_fim_bloco(linhas, inicio):
-
-    profundidade = 0
-
-    for i in range(inicio, len(linhas)):
-
-        linha = linhas[i].strip()
-
-        # IF
-        if linha.startswith("FICA FENDO IFFO"):
-            profundidade += 1
-
-        # WHILE
-        elif linha.startswith("ME DE FAFIENCIA!"):
-            profundidade += 1
-
-        # FOR
-        elif linha.startswith("FAZ DE NOFO!"):
-            profundidade += 1
-
-        # MATCH
-        elif linha.startswith("FAMO VER QUAL É"):
-            profundidade += 1
-
-        # Fim de bloco
-        elif linha == "ACABOU A CONVERFA":
-
-            profundidade -= 1
-
-            if profundidade == 0:
-                return i
-
-    return len(linhas)
-
-
-# ==========================================
-# EXECUTAR BLOCO
-# ==========================================
-
-def executar_bloco(linhas):
-
-    i = 0
-
-    while i < len(linhas):
-
-        linha = linhas[i].strip()
-
-        # ==========================================
-        # LINHA VAZIA
-        # ==========================================
-
-        if not linha:
-
-            i += 1
-            continue
-
-        # ==========================================
-        # COMENTÁRIO
-        # ==========================================
-
-        if linha.startswith("BTW"):
-
-            i += 1
-            continue
-
-        # ==========================================
-        # FEM-FINDO!
-        # Início do programa
-        # ==========================================
-
-        elif linha.startswith("FEM-FINDO!"):
-
-            pass
-
-        # ==========================================
-        # FENHA UM FOM FIA!
-        # Final do programa
-        # ==========================================
-
-        elif linha.startswith("FENHA UM FOM FIA!"):
-
-            break
-
-        # ==========================================
-        # EFCUTA EFFA!
-        # print()
-        # ==========================================
-
-        elif linha.startswith("EFCUTA EFFA!"):
-
-            expressao = linha[len("EFCUTA EFFA!"):].strip()
-
-            # Remove parênteses
-            if expressao.startswith("(") and expressao.endswith(")"):
-
-                expressao = expressao[1:-1].strip()
-
-            # Concatenação com +
-            partes = expressao.split("+")
-
-            resultado = ""
-
-            for parte in partes:
-
-                resultado += str(
-                    valor(parte.strip())
-                )
-
-            print(resultado)
-
-        # ==========================================
-        # É VERFADE QUE
-        # Criação de variável
-        # ==========================================
-
-        elif linha.startswith("É VERFADE QUE"):
-
-            restante = linha[len("É VERFADE QUE"):].strip()
-
-            partes = restante.split(
-                " É A MEFMA COIFA QUE ",
-                1
+# ============================================================
+# FYFHON - Interpretador da linguagem
+# ============================================================
+
+INICIO = "FEM-FINDO!"
+FIM = "FENHA UM FOM FIA!"
+MOSTRAR = "EFCUTA EFFA!"
+ATRIBUIR = "É VERFADE QUE"
+IGUAL = "É A MEFMA COIFA QUE"
+ENTRADA = "FALE MINHA LINFA"
+SE = "FICA FENDO IFFO"
+SENAO = "NOFFA FINHORA QUE RAIFA!"
+ENQUANTO = "ME DE FAFIENCIA!"
+PARA = "FAZ DE NOFO!"
+ESCOLHER = "FAMO VER QUAL É?"
+CASO = "É EFFE"
+ENTAO = "ENFÃO FAZ AFFIM"
+FIM_BLOCO = "ACABOU A CONVERFA"
+
+
+# ============================================================
+# EXPRESSÕES E VALORES
+# ============================================================
+
+FUNCOES = {
+    "str": str,
+    "int": int,
+    "float": float,
+    "len": len,
+    "abs": abs,
+    "round": round,
+}
+
+
+def traduzir_expressao(texto):
+    """Traduz operadores FYFHON para operadores de expressão."""
+
+    partes = re.split(
+        r'("(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\')',
+        texto
+    )
+
+    substituicoes = [
+        (r"\bÉ DIFERENTE DE\b", "!="),
+        (r"\bÉ MAIOR OU IGUAL A\b", ">="),
+        (r"\bÉ MENOR OU IGUAL A\b", "<="),
+        (r"\bÉ IGUAL A\b", "=="),
+        (r"\bÉ MAIOR QUE\b", ">"),
+        (r"\bÉ MENOR QUE\b", "<"),
+        (r"\bE\b", "and"),
+        (r"\bOU\b", "or"),
+        (r"\bNÃO\b", "not"),
+        (r"\bFATO FIRMADO!\b", "True"),
+        (r"\bFALSO, FALSO, FALSO!\b", "False"),
+    ]
+
+    for i in range(0, len(partes), 2):
+        for padrao, novo in substituicoes:
+            partes[i] = re.sub(
+                padrao, novo, partes[i], flags=re.IGNORECASE
             )
 
-            if len(partes) == 2:
+    return "".join(partes)
 
-                nome = partes[0].strip()
 
-                valor_variavel = valor(partes[1])
 
-                variaveis[nome] = valor_variavel
+def avaliar(texto, variaveis):
+    texto = texto.strip()
 
-        # ==========================================
-        # É A MEFMA COIFA QUE
-        # Atribuição
-        # ==========================================
+    # Lê uma entrada do usuário.
+    if texto.startswith(ENTRADA):
+        prompt = texto[len(ENTRADA):].strip()
 
-        elif " É A MEFMA COIFA QUE " in linha:
+        if prompt.startswith("(") and prompt.endswith(")"):
+            prompt = prompt[1:-1].strip()
 
-            partes = linha.split(
-                " É A MEFMA COIFA QUE ",
-                1
-            )
+        if prompt:
+            mensagem = avaliar(prompt, variaveis)
+            return input(str(mensagem))
 
-            nome = partes[0].strip()
+        return input("Digite um valor: ")
 
-            novo_valor = valor(partes[1])
+    texto = traduzir_expressao(texto)
+    arvore = ast.parse(texto, mode="eval")
 
-            variaveis[nome] = novo_valor
+    permitidos = (
+        ast.Expression, ast.Constant, ast.Name, ast.Load,
+        ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare,
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv,
+        ast.Mod, ast.Pow, ast.USub, ast.UAdd, ast.Not,
+        ast.And, ast.Or, ast.Eq, ast.NotEq, ast.Lt,
+        ast.LtE, ast.Gt, ast.GtE, ast.Call,
+    )
 
-        # ==========================================
-        # FALE MINHA LINFA
-        # input()
-        # ==========================================
+    for no in ast.walk(arvore):
+        if not isinstance(no, permitidos):
+            raise ValueError(f"Expressão não permitida: {texto}")
 
-        elif linha.startswith("FALE MINHA LINFA"):
+        if isinstance(no, ast.Name):
+            if no.id not in variaveis and no.id not in FUNCOES:
+                raise ValueError(f"Variável não definida: {no.id}")
 
-            restante = linha[
-                len("FALE MINHA LINFA"):
-            ].strip()
+        if isinstance(no, ast.Call):
+            if not isinstance(no.func, ast.Name) or no.func.id not in FUNCOES:
+                raise ValueError("Função não permitida.")
+            if no.keywords:
+                raise ValueError("Argumentos nomeados não permitidos.")
 
-            nome = restante
+    return eval(
+        compile(arvore, "<FYFHON>", "eval"),
+        {"__builtins__": {}},
+        {**FUNCOES, **variaveis},
+    )
 
-            entrada = input("> ")
 
-            variaveis[nome] = entrada
 
-        # ==========================================
-        # FICA FENDO IFFO
-        # if
-        # ==========================================
+# ============================================================
+# ANALISADOR DE SINTAXE
+# ============================================================
 
-        elif linha.startswith("FICA FENDO IFFO"):
+class InterpretadorFYFHON:
 
-            condicao = linha[
-                len("FICA FENDO IFFO"):
-            ].strip()
+    def __init__(self, arquivo):
+        with open(arquivo, "r", encoding="utf-8-sig") as f:
+            self.linhas = [
+                linha.strip()
+                for linha in f
+                if linha.strip() and not linha.strip().startswith("#")
+            ]
 
-            # Remove parênteses
-            if (
-                condicao.startswith("(")
-                and condicao.endswith(")")
-            ):
+        self.posicao = 0
+        self.variaveis = {}
 
-                condicao = condicao[1:-1].strip()
+    def erro(self, mensagem):
+        numero = min(self.posicao + 1, len(self.linhas))
+        raise SyntaxError(f"Linha {numero}: {mensagem}")
 
-            # ----------------------------------
-            # Procura ENFÃO FAZ AFFIM
-            # ----------------------------------
+    def atual(self):
+        if self.posicao >= len(self.linhas):
+            return None
+        return self.linhas[self.posicao]
 
-            j = i + 1
+    def consumir(self, esperado=None):
+        linha = self.atual()
 
-            while j < len(linhas):
+        if linha is None:
+            self.erro("Fim inesperado do arquivo.")
 
-                if linhas[j].strip() == "ENFÃO FAZ AFFIM":
+        if esperado is not None and linha != esperado:
+            self.erro(f"Esperado '{esperado}', encontrado '{linha}'.")
 
-                    break
+        self.posicao += 1
+        return linha
 
-                j += 1
+    def obter_condicao(self, linha, comando):
+        resto = linha[len(comando):].strip()
 
-            # ----------------------------------
-            # Se não encontrou
-            # ----------------------------------
+        if not resto.endswith(ENTAO):
+            self.erro(f"Esperado '{ENTAO}'.")
 
-            if j >= len(linhas):
+        return resto[:-len(ENTAO)].strip()
 
-                print(
-                    "🦖 ERRO: "
-                    "Faltou ENFÃO FAZ AFFIM!"
-                )
+        
+    
+    def obter_bloco(self, paradas):
+        comandos = []
 
+        while self.atual() is not None:
+            linha = self.atual()
+
+            # Para antes do próximo caso ou do fim do bloco.
+            if linha in paradas:
                 break
 
-            # ----------------------------------
-            # Procura fim do bloco
-            # ----------------------------------
+            # Um caso pertence exclusivamente ao comando ESCOLHER.
+            if linha.startswith(CASO):
+                break
 
-            fim = encontrar_fim_bloco(
-                linhas,
-                i
+            comandos.append(self.ler_comando())
+
+        return comandos
+
+
+    def ler_comando(self):
+        linha = self.atual()
+
+        if linha is None:
+            self.erro("Esperado um comando.")
+
+        # Início e encerramento do programa
+        if linha == INICIO:
+            self.consumir()
+            return ("inicio",)
+
+        if linha == FIM:
+            self.consumir()
+            return ("fim",)
+
+        # Exibição
+        if linha.startswith(MOSTRAR):
+            self.consumir()
+            expressao = linha[len(MOSTRAR):].strip()
+            return ("mostrar", expressao)
+
+        # Atribuição de variável
+        if linha.startswith(ATRIBUIR):
+            self.consumir()
+            resto = linha[len(ATRIBUIR):].strip()
+
+            if IGUAL not in resto:
+                self.erro(f"Esperado '{IGUAL}'.")
+
+            nome, expressao = resto.split(IGUAL, 1)
+            nome = nome.strip()
+            expressao = expressao.strip()
+
+            if not re.fullmatch(r"[A-Za-z_]\w*", nome):
+                self.erro(f"Nome de variável inválido: {nome}")
+
+            return ("atribuir", nome, expressao)
+
+        # Condição: if / else
+        if linha.startswith(SE):
+            self.consumir()
+            condicao = self.obter_condicao(linha, SE)
+
+            verdadeiro = self.obter_bloco({SENAO, FIM_BLOCO})
+            falso = []
+
+            if self.atual() == SENAO:
+                self.consumir(SENAO)
+                falso = self.obter_bloco({FIM_BLOCO})
+
+            self.consumir(FIM_BLOCO)
+            return ("se", condicao, verdadeiro, falso)
+
+        # Repetição while
+        if linha.startswith(ENQUANTO):
+            self.consumir()
+            condicao = self.obter_condicao(linha, ENQUANTO)
+            corpo = self.obter_bloco({FIM_BLOCO})
+            self.consumir(FIM_BLOCO)
+            return ("enquanto", condicao, corpo)
+
+        # Repetição for: de início até fim, inclusive
+        if linha.startswith(PARA):
+            self.consumir()
+            resto = self.obter_condicao(linha, PARA)
+
+            padrao = (
+                r"([A-Za-z_]\w*)\s+DE\s+(.+?)\s+ATÉ\s+(.+)"
+            )
+            resultado = re.fullmatch(
+                padrao, resto, flags=re.IGNORECASE
             )
 
-            # ----------------------------------
-            # Bloco verdadeiro
-            # ----------------------------------
+            if not resultado:
+                self.erro(
+                    "Use: FAZ DE NOFO! i DE 1 ATÉ 5 "
+                    "ENFÃO FAZ AFFIM"
+                )
 
-            bloco_sim = linhas[
-                j + 1:fim
-            ]
+            nome, inicio, fim = resultado.groups()
+            corpo = self.obter_bloco({FIM_BLOCO})
+            self.consumir(FIM_BLOCO)
 
-            bloco_nao = []
+            return ("para", nome, inicio, fim, corpo)
 
-            profundidade = 0
+        # Seleção match / case
+        
+        if linha.startswith(ESCOLHER):
+            self.consumir()
+            expressao = self.obter_condicao(linha, ESCOLHER)
+            casos = []
 
-            encontrou_else = False
+            while self.atual() is not None:
+                linha_caso = self.atual()
 
-            k = j + 1
-
-            # ----------------------------------
-            # Procura ELSE
-            # ----------------------------------
-
-            while k < fim:
-
-                atual = linhas[k].strip()
-
-                if atual.startswith(
-                    "FICA FENDO IFFO"
-                ):
-
-                    profundidade += 1
-
-                elif atual.startswith(
-                    "ME DE FAFIENCIA!"
-                ):
-
-                    profundidade += 1
-
-                elif atual.startswith(
-                    "FAZ DE NOFO!"
-                ):
-
-                    profundidade += 1
-
-                elif atual.startswith(
-                    "FAMO VER QUAL É"
-                ):
-
-                    profundidade += 1
-
-                elif atual == "ACABOU A CONVERFA":
-
-                    profundidade -= 1
-
-                elif (
-                    atual ==
-                    "NOFFA FINHORA QUE RAIFA!"
-                    and profundidade == 0
-                ):
-
-                    encontrou_else = True
-
-                    bloco_sim = linhas[
-                        j + 1:k
-                    ]
-
-                    bloco_nao = linhas[
-                        k + 1:fim
-                    ]
-
+                if linha_caso == FIM_BLOCO:
                     break
 
-                k += 1
+                if not linha_caso.startswith(CASO):
+                    self.erro("Esperado um caso 'É EFFE'.")
 
-            # ----------------------------------
-            # Avalia condição
-            # ----------------------------------
+                self.consumir()
 
-            partes = condicao.split()
+                valor = self.obter_condicao(linha_caso, CASO)
 
-            if len(partes) >= 3:
+                # Lê o corpo do caso até o próximo caso ou fim da seleção.
+                corpo = self.obter_bloco({CASO, FIM_BLOCO})
+                casos.append((valor, corpo))
 
-                esquerda = partes[0]
+            self.consumir(FIM_BLOCO)
 
-                operador = partes[1]
+            return ("escolher", expressao, casos)
 
-                direita = " ".join(
-                    partes[2:]
-                )
+        if linha == SENAO:
+            self.erro("NOFFA FINHORA QUE RAIFA! sem um FICA FENDO IFFO.")
 
-                resultado = comparar(
-                    esquerda,
-                    operador,
-                    direita
-                )
+        if linha == FIM_BLOCO:
+            self.erro("ACABOU A CONVERFA sem bloco aberto.")
 
-                if resultado:
+        self.erro(f"Comando desconhecido: {linha}")
 
-                    executar_bloco(
-                        bloco_sim
-                    )
 
-                elif encontrou_else:
+    # ========================================================
+    # EXECUÇÃO DOS COMANDOS
+    # ========================================================
 
-                    executar_bloco(
-                        bloco_nao
-                    )
+    def executar_lista(self, comandos):
+        for comando in comandos:
+            tipo = comando[0]
 
-            i = fim
-
-        # ==========================================
-        # ME DE FAFIENCIA!
-        # while
-        # ==========================================
-
-        elif linha.startswith("ME DE FAFIENCIA!"):
-
-            condicao = linha[
-                len("ME DE FAFIENCIA!"):
-            ].strip()
-
-            if (
-                condicao.startswith("(")
-                and condicao.endswith(")")
-            ):
-
-                condicao = condicao[1:-1].strip()
-
-            # Procura fim
-            fim = encontrar_fim_bloco(
-                linhas,
-                i
-            )
-
-            bloco = linhas[
-                i + 1:fim
-            ]
-
-            # Remove ENFÃO FAZ AFFIM
-            if (
-                bloco
-                and bloco[0].strip()
-                == "ENFÃO FAZ AFFIM"
-            ):
-
-                bloco = bloco[1:]
-
-            # ----------------------------------
-            # Executa enquanto verdadeiro
-            # ----------------------------------
-
-            while True:
-
-                partes = condicao.split()
-
-                if len(partes) < 3:
-
-                    break
-
-                esquerda = partes[0]
-
-                operador = partes[1]
-
-                direita = " ".join(
-                    partes[2:]
-                )
-
-                if not comparar(
-                    esquerda,
-                    operador,
-                    direita
-                ):
-
-                    break
-
-                executar_bloco(
-                    bloco
-                )
-
-            i = fim
-
-        # ==========================================
-        # FAZ DE NOFO!
-        # for
-        # ==========================================
-
-        elif linha.startswith("FAZ DE NOFO!"):
-
-            restante = linha[
-                len("FAZ DE NOFO!"):
-            ].strip()
-
-            # ----------------------------------
-            # Formato:
-            #
-            # FAZ DE NOFO! i EM range(5)
-            # ----------------------------------
-
-            partes = restante.split(
-                " EM ",
-                1
-            )
-
-            if len(partes) != 2:
-
-                print(
-                    "🦖 ERRO: "
-                    "Sintaxe inválida no "
-                    "FAZ DE NOFO!"
-                )
-
-                i += 1
+            if tipo in ("inicio", "fim"):
+                if tipo == "fim":
+                    return "fim"
                 continue
 
-            variavel_for = partes[0].strip()
+            if tipo == "mostrar":
+                print(avaliar(comando[1], self.variaveis))
 
-            sequencia = partes[1].strip()
-
-            # ----------------------------------
-            # Procura ENFÃO FAZ AFFIM
-            # ----------------------------------
-
-            j = i + 1
-
-            while j < len(linhas):
-
-                if (
-                    linhas[j].strip()
-                    == "ENFÃO FAZ AFFIM"
-                ):
-
-                    break
-
-                j += 1
-
-            if j >= len(linhas):
-
-                print(
-                    "🦖 ERRO: "
-                    "Faltou ENFÃO FAZ AFFIM!"
+            elif tipo == "atribuir":
+                _, nome, expressao = comando
+                self.variaveis[nome] = avaliar(
+                    expressao, self.variaveis
                 )
 
-                break
+            elif tipo == "se":
+                _, condicao, verdadeiro, falso = comando
 
-            # ----------------------------------
-            # Procura fim
-            # ----------------------------------
-
-            fim = encontrar_fim_bloco(
-                linhas,
-                i
-            )
-
-            bloco = linhas[
-                j + 1:fim
-            ]
-
-            # ----------------------------------
-            # range()
-            # ----------------------------------
-
-            if (
-                sequencia.startswith("range(")
-                and sequencia.endswith(")")
-            ):
-
-                conteudo = sequencia[
-                    6:-1
-                ].strip()
-
-                valores_range = conteudo.split(",")
-
-                try:
-
-                    valores_range = [
-                        int(x.strip())
-                        for x in valores_range
-                    ]
-
-                    if len(valores_range) == 1:
-
-                        inicio = 0
-                        fim_range = valores_range[0]
-                        passo = 1
-
-                    elif len(valores_range) == 2:
-
-                        inicio = valores_range[0]
-                        fim_range = valores_range[1]
-                        passo = 1
-
-                    elif len(valores_range) == 3:
-
-                        inicio = valores_range[0]
-                        fim_range = valores_range[1]
-                        passo = valores_range[2]
-
-                    else:
-
-                        raise ValueError
-
-                    # ----------------------------------
-                    # Executa o FOR
-                    # ----------------------------------
-
-                    for numero in range(
-                        inicio,
-                        fim_range,
-                        passo
-                    ):
-
-                        variaveis[
-                            variavel_for
-                        ] = numero
-
-                        executar_bloco(
-                            bloco
-                        )
-
-                except ValueError:
-
-                    print(
-                        "🦖 ERRO: "
-                        "Valor inválido no range!"
-                    )
-
-            else:
-
-                print(
-                    "🦖 ERRO: "
-                    "O FAZ DE NOFO! "
-                    "atualmente aceita apenas "
-                    "range()."
-                )
-
-            i = fim
-
-        # ==========================================
-        # FAMO VER QUAL É
-        # match
-        # ==========================================
-
-        elif linha.startswith("FAMO VER QUAL É"):
-
-            expressao = linha[
-                len("FAMO VER QUAL É"):
-            ].strip()
-
-            # Remove parênteses
-            if (
-                expressao.startswith("(")
-                and expressao.endswith(")")
-            ):
-
-                expressao = expressao[1:-1].strip()
-
-            # Valor que será comparado
-            valor_match = valor(
-                expressao
-            )
-
-            # ----------------------------------
-            # Procura fim do MATCH
-            # ----------------------------------
-
-            fim = encontrar_fim_bloco(
-                linhas,
-                i
-            )
-
-            # ----------------------------------
-            # Procura os CASES
-            # ----------------------------------
-
-            k = i + 1
-
-            while k < fim:
-
-                atual = linhas[k].strip()
-
-                # Encontrou É EFFE
-                if atual.startswith("É EFFE"):
-
-                    caso = atual[
-                        len("É EFFE"):
-                    ].strip()
-
-                    # Remove parênteses
-                    if (
-                        caso.startswith("(")
-                        and caso.endswith(")")
-                    ):
-
-                        caso = caso[1:-1].strip()
-
-                    valor_caso = valor(caso)
-
-                    # ----------------------------------
-                    # Encontra início do próximo CASE
-                    # ----------------------------------
-
-                    inicio_bloco = k + 1
-
-                    proximo = inicio_bloco
-
-                    while proximo < fim:
-
-                        linha_proxima = (
-                            linhas[proximo].strip()
-                        )
-
-                        if linha_proxima.startswith(
-                            "É EFFE"
-                        ):
-
-                            break
-
-                        proximo += 1
-
-                    bloco_caso = linhas[
-                        inicio_bloco:proximo
-                    ]
-
-                    # ----------------------------------
-                    # Verifica se é o caso correto
-                    # ----------------------------------
-
-                    if valor_match == valor_caso:
-
-                        executar_bloco(
-                            bloco_caso
-                        )
-
-                        # Para depois de encontrar
-                        # o primeiro caso correspondente
-                        break
-
-                    k = proximo
-
+                if avaliar(condicao, self.variaveis):
+                    resultado = self.executar_lista(verdadeiro)
                 else:
+                    resultado = self.executar_lista(falso)
 
-                    k += 1
+                if resultado == "fim":
+                    return "fim"
 
-            i = fim
+            elif tipo == "enquanto":
+                _, condicao, corpo = comando
+                repeticoes = 0
 
-        # ==========================================
-        # É EFFE
-        # case
-        # ==========================================
+                while avaliar(condicao, self.variaveis):
+                    repeticoes += 1
 
-        elif linha.startswith("É EFFE"):
+                    if repeticoes > 100000:
+                        raise RuntimeError(
+                            "Limite de repetições excedido."
+                        )
 
-            # O CASE é tratado pelo MATCH
-            pass
+                    if self.executar_lista(corpo) == "fim":
+                        return "fim"
 
-        # ==========================================
-        # ENFÃO FAZ AFFIM
-        # início do bloco
-        # ==========================================
+            elif tipo == "para":
+                _, nome, inicio, fim, corpo = comando
 
-        elif linha == "ENFÃO FAZ AFFIM":
+                primeiro = int(avaliar(inicio, self.variaveis))
+                ultimo = int(avaliar(fim, self.variaveis))
 
-            pass
+                passo = 1 if primeiro <= ultimo else -1
 
-        # ==========================================
-        # NOFFA FINHORA QUE RAIFA!
-        # else
-        # ==========================================
+                for valor in range(primeiro, ultimo + passo, passo):
+                    self.variaveis[nome] = valor
 
-        elif linha == "NOFFA FINHORA QUE RAIFA!":
+                    if self.executar_lista(corpo) == "fim":
+                        return "fim"
 
-            pass
+            elif tipo == "escolher":
+                _, expressao, casos = comando
+                valor_escolhido = avaliar(
+                    expressao, self.variaveis
+                )
 
-        # ==========================================
-        # ACABOU A CONVERFA
-        # fim do bloco
-        # ==========================================
+                caso_padrao = None
 
-        elif linha == "ACABOU A CONVERFA":
+                for valor, corpo in casos:
+                    if valor.strip() == "_":
+                        caso_padrao = corpo
+                        continue
 
-            pass
+                    valor_caso = avaliar(valor, self.variaveis)
 
-        # ==========================================
-        # COMANDO DESCONHECIDO
-        # ==========================================
+                    if valor_escolhido == valor_caso:
+                        if self.executar_lista(corpo) == "fim":
+                            return "fim"
+                        break
+                else:
+                    if caso_padrao is not None:
+                        if self.executar_lista(caso_padrao) == "fim":
+                            return "fim"
 
-        else:
+        return None
 
-            print(
-                "🦖 Comando não reconhecido:",
-                linha
-            )
+    def executar(self):
+        try:
+            programa = self.obter_bloco(set())
 
-        i += 1
+            self.executar_lista(programa)
 
-
-# ==========================================
-# PROGRAMA PRINCIPAL
-# ==========================================
-
-if len(sys.argv) < 2:
-
-    print(
-        "🦖 Focê esqueceu de informar o arquivo!"
-    )
-
-    print(
-        "Uso: python fyhon.py programa.fyhon"
-    )
-
-    sys.exit()
+        except (SyntaxError, ValueError, TypeError, NameError,
+                ZeroDivisionError, RuntimeError, EOFError) as exc:
+            print(f"Erro FYFHON: {exc}")
 
 
-arquivo = sys.argv[1]
+# ============================================================
+# INICIALIZAÇÃO
+# ============================================================
 
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Interpretador FYFHON")
+        print("Uso: py fyfhon.py arquivo.fyfhon")
+        sys.exit(1)
 
-# ==========================================
-# ABRIR ARQUIVO
-# ==========================================
+    try:
+        interpretador = InterpretadorFYFHON(sys.argv[1])
+        interpretador.executar()
 
-try:
-
-    with open(
-        arquivo,
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        linhas = f.readlines()
-
-except FileNotFoundError:
-
-    print(
-        "🦖 FALHA! Arquivo não encontrado."
-    )
-
-    sys.exit()
-
-
-# ==========================================
-# EXECUTAR
-# ==========================================
-
-executar_bloco(linhas)
+    except OSError as exc:
+        print(f"Erro ao abrir o arquivo: {exc}")

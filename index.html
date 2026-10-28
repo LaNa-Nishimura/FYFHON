@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FYFHON — Linguagem de Programação</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">
+                <img src="img/icone2.png" alt="Dinofauro" class="logo-img">
+                <span>FYFHON</span>
+            </a>
+            <div class="menu">
+                <a href="#sobre">Sobre</a>
+                <a href="#comandos">Comandos</a>
+                <a href="#exemplos">Exemplos</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container apresentacao">
+                <div>
+                    <h1>Conheça a <span>FYFHON</span></h1>
+                    <p class="intro">
+                        Uma linguagem de programação feita em Python,
+                        inspirada no meme do Dinofauro.
+                    </p>
+                </div>
+
+                <img src="img/fyfhon.png" alt="Dinofauro" class="imagem-dino">
+            </div>
+        </section>
+
+        <section id="sobre">
+            <div class="container">
+                <h2>Sobre a FYFHON</h2>
+                <p class="descricao">A FYFHON é uma linguagem de programação experimental criada em Python e inspirada no Dinofauro, o famoso dinossauro azul que ficou conhecido na internet pelo seu jeito peculiar de falar. O meme popularizou o chamado dinofaurês, uma forma divertida de escrever palavras trocando algumas letras por “F”.</p>
+                <p class="descricao">A ideia da FYFHON é levar essa brincadeira para o mundo da programação. Em vez de usar os comandos tradicionais do Python, a linguagem utiliza instruções próprias, escritas no estilo do dinofaurês. Assim, comandos comuns ganham nomes como EFCUTA EFFA!, FEM-FINDO! e FENHA UM FOM FIA!.</p>
+                <p class="descricao">Apesar dos nomes engraçados, a FYFHON funciona como um projeto real de programação: seu interpretador é desenvolvido em Python e tem a função de ler os comandos escritos pelo usuário e executar as instruções reconhecidas pela linguagem.</p>
+            </div>
+        </section>
+
+        <section class="fundo" id="comandos">
+            <div class="container">
+                <h2>Comandos da linguagem</h2>
+                <p class="descricao">Consulte os principais comandos e o que cada um faz.</p>
+                <div class="tabela-responsiva">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Comando FYFHON</th>
+                                <th>Equivalente</th>
+                                <th>Função</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>FEM-FINDO!</code></td><td>Início</td><td>Marca o início do programa.</td></tr>
+                            <tr><td><code>FENHA UM FOM FIA!</code></td><td>Fim</td><td>Encerra o programa.</td></tr>
+                            <tr><td><code>EFCUTA EFFA!</code></td><td>print()</td><td>Mostra uma mensagem ou valor.</td></tr>
+                            <tr><td><code>É VERFADE QUE</code></td><td>Atribuição</td><td>Declara ou atualiza uma variável.</td></tr>
+                            <tr><td><code>É A MEFMA COIFA QUE</code></td><td>=</td><td>Separa a variável do valor atribuído.</td></tr>
+                            <tr><td><code>FALE MINHA LINFA</code></td><td>input()</td><td>Lê dados digitados pelo usuário.</td></tr>
+                            <tr><td><code>FICA FENDO IFFO</code></td><td>if</td><td>Executa comandos se a condição for verdadeira.</td></tr>
+                            <tr><td><code>ENFÃO FAZ AFFIM</code></td><td>Início do bloco</td><td>Indica o começo do bloco de comandos.</td></tr>
+                            <tr><td><code>NOFFA FINHORA QUE RAIFA!</code></td><td>else</td><td>Executa comandos quando a condição é falsa.</td></tr>
+                            <tr><td><code>ME DE FAFIENCIA!</code></td><td>while</td><td>Repete enquanto uma condição for verdadeira.</td></tr>
+                            <tr><td><code>FAZ DE NOFO!</code></td><td>for</td><td>Repete comandos para uma sequência de valores.</td></tr>
+                            <tr><td><code>FAMO VER QUAL É?</code></td><td>match</td><td>Seleciona um caso conforme um valor.</td></tr>
+                            <tr><td><code>É EFFE</code></td><td>case</td><td>Define um caso dentro de uma seleção.</td></tr>
+                            <tr><td><code>ACABOU A CONVERFA</code></td><td>Fim do bloco</td><td>Encerra um bloco de condição ou repetição.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="exemplos">
+            <div class="container">
+                <h2>Exemplos de código</h2>
+                <p class="descricao">Veja como os comandos podem ser usados em programas FYFHON.</p>
+                <article class="exemplo">
+                    <div class="conteudo-exemplo">
+                        <h3>1. Mostrar uma mensagem</h3>
+                    <div class="codigo"><pre>FEM-FINDO!
+
+EFCUTA EFFA! ("Olá, mundo!")
+
+FENHA UM FOM FIA!</pre></div>
+                    <p>O programa exibe a mensagem “Olá, mundo!” na tela.</p>
+                    </div>
+                    <img src="img/fomfia.webp" alt="Dinofauro" class="imagem-dino">
+                </article>
+
+                <article class="exemplo">
+                    <div class="conteudo-exemplo">
+                        <h3>2. Ler o nome do usuário</h3>
+                    <div class="codigo"><pre>FEM-FINDO!
+
+É VERFADE QUE nome É A MEFMA COIFA QUE FALE MINHA LINFA ("Digite seu nome: ")
+EFCUTA EFFA! (nome)
+
+FENHA UM FOM FIA!</pre></div>
+                    <p>O programa pede o nome, guarda o texto na variável <code>nome</code> e depois o mostra.</p>
+                    </div>
+                    <img src="img/minhalinfa.jpg" alt="Dinofauro" class="imagem-dino">
+                </article>
+
+                <article class="exemplo">
+                    <div class="conteudo-exemplo">
+                        <h3>3. Usar uma condição</h3>
+                    <div class="codigo"><pre>FEM-FINDO!
+
+É VERFADE QUE idade É A MEFMA COIFA QUE 18
+
+FICA FENDO IFFO idade É MAIOR OU IGUAL A 18 ENFÃO FAZ AFFIM
+    EFCUTA EFFA! ("Maior de idade")
+NOFFA FINHORA QUE RAIFA!
+    EFCUTA EFFA! ("Menor de idade")
+ACABOU A CONVERFA
+
+FENHA UM FOM FIA!</pre></div>
+                    <p>O programa verifica a idade e exibe uma mensagem conforme o resultado da condição.</p>
+                    </div>
+                    <img src="img/noffafinhora.jpg" alt="Dinofauro" class="imagem-dino">
+                </article>
+
+                <article class="exemplo">
+                    <div class="conteudo-exemplo">
+                        <h3>4. Repetir com FOR</h3>
+                    <div class="codigo"><pre>FEM-FINDO!
+
+FAZ DE NOFO! i DE 1 ATÉ 5 ENFÃO FAZ AFFIM
+    EFCUTA EFFA! (i)
+ACABOU A CONVERFA
+
+FENHA UM FOM FIA!</pre></div>
+                    <p>O laço mostra os números de 1 até 5.</p>
+                    </div>
+                    <img src="img/frigadeiro.jpg" alt="Dinofauro" class="imagem-dino">
+                </article>
+
+                <article class="exemplo">
+                    <div class="conteudo-exemplo">
+                        <h3>5. Escolher um caso</h3>
+                    <div class="codigo"><pre>FEM-FINDO!
+
+É VERFADE QUE opcao É A MEFMA COIFA QUE 2
+
+FAMO VER QUAL É? opcao ENFÃO FAZ AFFIM
+    É EFFE 1 ENFÃO FAZ AFFIM
+        EFCUTA EFFA! ("Você escolheu um")
+    É EFFE 2 ENFÃO FAZ AFFIM
+        EFCUTA EFFA! ("Você escolheu dois")
+    É EFFE _ ENFÃO FAZ AFFIM
+        EFCUTA EFFA! ("Opção desconhecida")
+ACABOU A CONVERFA
+
+FENHA UM FOM FIA!</pre></div>
+                    <p>O programa compara a opção com os casos definidos e executa o bloco correspondente.</p>
+                    </div>
+                    <img src="img/fix.jpg" alt="Dinofauro" class="imagem-dino">
+                </article>
+            </div>
+        </section>
+
+        <section class="fundo" id="executar">
+            <div class="container">
+                <h2>Como executar</h2>
+                <p class="descricao">Salve o código em um arquivo com a extensão <code>.fyfhon</code> e execute-o usando o interpretador Python da linguagem.</p>
+                <div class="codigo"><pre>py fyfhon.py exemplo.fyfhon</pre></div>
+                <p class="nota">O arquivo <code>fyfhon.py</code> precisa estar disponível na pasta do projeto. Não execute o arquivo FYFHON diretamente com o Python.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p><strong>FYFHON!</strong> — Uma linguagem experimental de programação.</p>
+        </div>
+    </footer>
+</body>
+</html>
